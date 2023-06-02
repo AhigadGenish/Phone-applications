@@ -1,0 +1,275 @@
+@startuml
+package phoneApplications {
+
+  class PhoneAppsMenu {
+    - phoneBookManager: PhoneBookManager
+    - diaryManager: DiaryManager
+    - smsManager: SMSManager
+    - mediaManager: MediaManager
+    + main(args: String[]): void
+    + PhoneAppsMenu()
+    - createButton(text: String, iconFileName: String): JButton
+    - openAppWindow(appName: String): void
+  }
+
+  PhoneAppsMenu --> PhoneBookManager
+  PhoneAppsMenu --> DiaryManager
+  PhoneAppsMenu --> SMSManager
+  PhoneAppsMenu --> MediaManager
+
+}
+package mediaApp{
+abstract class Media {
+  - mediaName: String
+  - mediaDuration: Duration
+  + Media(newMediaName: String, newMediaDuration: Duration)
+  + getMediaName(): String
+  + getMediaDuration(): Duration
+  + setMediaName(mediaName: String): void
+  + setMediaDuration(mediaDuration: Duration): void
+  + printDurationInFormat(): String
+  + toString(): String
+}
+
+class Music {
+  + Music(newMediaName: String, newMediaDuration: Duration)
+  + toString(): String
+}
+
+class Video {
+  + Video(newMediaName: String, newMediaDuration: Duration)
+  + toString(): String
+}
+
+class MediaPlayer {
+  - mediaPlayer: ArrayList<Media>
+  + MediaPlayer()
+  + getMediaPlayer(): ArrayList<Media>
+  + addMedia(newMedia: Media): void
+  + returnMediaByName(anyName: String): Media
+  + playMediaByName(givenName: String, mediaTextArea: JTextArea): void
+  + playingAllMedia(mediaTextArea: JTextArea): void
+}
+class MediaManager {
+  - mediaPlayer: MediaPlayer
+  + MediaManager()
+  + getMedaiaPlayer(): MediaPlayer
+}
+
+class MediaWindow extends JFrame {
+  - mediaManager: MediaManager
+  - mediaTextArea: JTextArea
+  - MediaWindow(newMediaManager: MediaManager)
+  + getInstance(newMediaManager: MediaManager): MediaWindow
+  + initialize(): void
+  + createButton(text: String): JButton
+  + handleButtonAction(buttonText: String): void
+  + addMedia(): void
+  + playMediaByName(): void
+  + playAllMedia(): void
+}
+
+Media <|-- Music
+Media <|-- Video
+MediaPlayer "1" *-- "*" Media
+MediaManager "1" -- "1" MediaPlayer
+MediaWindow "1" *-- "1" MediaManager
+}
+
+
+package phoneBookApp{
+class PhoneBookWindow extends JFrame {
+  - phoneBookWindowInstance: PhoneBookWindow
+  - phoneBookManager: PhoneBookManager
+  - phoneBookTextArea: JTextArea
+  + getInstance(newPhoneBookmanager: PhoneBookManager): PhoneBookWindow
+  + createButton(text: String): JButton
+  + handleButtonAction(buttonText: String): void
+}
+
+class PhoneBookManager {
+  - phoneBook: ContactList
+  - observers: ArrayList<ContactObserver>
+  + PhoneBookManager()
+  + getPhoneBook(): ContactList
+  + isContactExist(anyContact: Contact): boolean
+  + isContactExist(anyContactName: String): boolean
+  + ContactByName(anyContactName: String): Contact
+  + registerObserver(observer: ContactObserver): void
+  + unregisterObserver(observer: ContactObserver): void
+  + notifyObservers(contact: Contact): void
+}
+
+class ContactList {
+  - contacts: List<Contact>
+  + addContact(contact: Contact): void
+  + removeContact(name: String): Contact
+  + printList(textArea: JTextArea): void
+  + searchContactByName(name: String): Contact
+  + sortListByName(): void
+  + sortListByPhoneNumber(): void
+  + removeDuplicate(): void
+  + reverse(): void
+  + exportPhoneBook(fileName: String): void
+  + importAndAppendPhoneBook(fileName: String): void
+}
+
+class Contact {
+  - name: String
+  - phoneNumber: String
+}
+interface ContactObserver{
+  +onContactRemoved(contact: Contact) : void
+  +isContactExist(Contact: Contact) : boolean
+}
+class ContactNameComparator implements Comparator{
+  + compare(c1: Contact, c2: Contact): int
+}
+class ContactPhoneComparator implements Comparator{
+  + compare(c1: Contact, c2: Contact): int
+}
+
+
+PhoneBookWindow --* PhoneBookManager
+PhoneBookManager --* ContactList
+ContactList "1" *-- "n" Contact
+}
+package diaryApp{
+abstract class Event {
+  - dateTime: LocalDateTime
+  - meetingDuration: Duration
+  + Event(anyDateTime: LocalDateTime, anyDuration: Duration)
+  + Event(anyEvent: Event)
+  + getDateTime(): LocalDateTime
+  + getMeetingDuration(): Duration
+  + setDateTime(dateTime: LocalDateTime): void
+  + setMeetingDuration(meetingDuration: Duration): void
+  - getTimeInFormat(): String
+  + toString(): String
+  + equals(obj: Object): boolean
+}
+class GeneralEvent extends Event {
+  - eventDescription: String
+  + GeneralEvent(anyDateTime: LocalDateTime, anyDuration: Duration, anyEventDescription: String)
+  + GeneralEvent(anyEvent: Event, anyEventDescription: String)
+  + GeneralEvent(anyGeneralEvent: GeneralEvent)
+  + getEventDescription(): String
+  + setEventDescription(GeneralEventDescription: String): void
+  + toString(): String
+  + equals(obj: Object): boolean
+}
+class Diary {
+  - diary: TreeMap<LocalDate, ArrayList<Event>>
+
+  + Diary()
+  + addEvent(Event newEvent)
+  + removeEvent(Event anyEvent)
+  + printEventInDate(LocalDate anyDate, JTextArea diaryTextArea)
+  + printDiary(JTextArea diaryTextArea)
+  + sortEventInDate(LocalDate anyDate)
+  + sortDiary()
+  + printCertainDatesEvents(LocalDate anyDate, JTextArea diaryTextArea)
+  + printAllEvents(JTextArea diaryTextArea)
+  + allEventsOfContactInDate(LocalDate anyDate, Contact anyContact): ArrayList<Event>
+  + allEventsWithGivenContact(Contact anyContact): ArrayList<Event>
+  + printAllEventsWithGivenContact(Contact anyContact, JTextArea diaryTextArea)
+  + detectCollisionAndRemoveLast()
+  - detectCollisionAndRemoveLastInGivenDate(ArrayList<Event> anyDateList)
+}
+
+class DiaryWindow extends JFrame {
+  - instance: DiaryWindow
+  - diaryManager: DiaryManager
+  - diaryTextArea: JTextArea
+  + getInstance(newDiaryManager: DiaryManager): void
+  + createButton(text: String): JButton
+  + handleButtonAction(buttonText: String): void
+  + checkEventCollisions(): void
+  + printAllEvents(): void
+  + printMeetingByContact(): void
+  + printEventsByDate(): void
+  + addOrRemoveEvent(addOrRemove: boolean): void
+  - initialize(): void
+}
+
+class DiaryManager implements ContactObserver {
+  - diary: Diary
+
+  + DiaryManager()
+  + getDiary(): Diary
+  + onContactRemoved(Contact anyContact)
+  + isContactExists(Contact anyContact)
+}
+class MeetingEvent extends Event {
+  - contact: Contact
+  + MeetingEvent(anyDateTime: LocalDateTime, anyDuration: Duration, anyContact: Contact)
+  + MeetingEvent(anyEvent: Event, anyContact: Contact)
+  + MeetingEvent(anyMeetingEvent: MeetingEvent)
+  + getContact(): Contact
+  + toString(): String
+  + equals(obj: Object): boolean
+}
+class EventComparator implements Comparator {
+  + compare(e1: Event, e2: Event): int
+}
+
+DiaryWindow --* DiaryManager
+DiaryManager --* Diary
+Diary "1" *-- "n" Event
+}
+package smsApp{
+class Message {
+- text: String
+- time: LocalDateTime
++ Message(anytext: String)
++ Message(otherMessage: Message)
++ getText(): String
++ getTime(): LocalDateTime
++ setText(text: String): void
+- getTimeInFormat(): String
++ toString(): String
+}
+class SMS {
+  - contact: Contact
+  - messageList: ArrayList<Message>
+  + SMS(contact: Contact)
+  + SMS(contact: Contact, anyMessageText: String)
+  + getContact(): Contact
+  + getMessageList(): ArrayList<Message>
+  + setContact(contact: Contact): void
+  + addMessage(anyMessageText: String): void
+  + toString(): String
+}
+class SMSList {
+- smsList: ArrayList<SMS>
++ SMSList()
++ getSMSList(): ArrayList<SMS>
+- containContact(anyContact: Contact): SMS
++ addMessageToContact(anyContact: Contact, messageText: String): void
++ deleteAllMessagesWithContact(anyContact: Contact): String
++ printAllMessagesWithContact(anyContact: Contact, SMSTextArea: JTextArea): void
++ printAllSMSList(SMSTextArea: JTextArea): void
++ printAllContactContainDesireSentence(sentence: String, SMSTextArea: JTextArea): void
+}
+class SMSManager implements ContactObserver {
+  - sms: SMSList
+  + SMSManager()
+  + getSMSList(): SMSList
+  + onContactRemoved(anyContact: Contact): void
+  + isContactExists(anyContact: Contact): boolean
+}
+class SMSWindow extends JFrame {
+- SmsManager: SMSManager
+- SMSTextArea: JTextArea
++ getInstance(manager: SMSManager): SMSWindow
++ initialize(): void
++ createButton(text: String): JButton
++ handleButtonAction(buttonText: String): void
+}
+SMSWindow --* SMSManager
+SMSManager --* SMSList
+SMSList "1" *-- "n" SMS
+SMS --* Contact
+SMS "1" *-- "n" Message
+}
+@enduml
